@@ -1,7 +1,6 @@
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
-# from user_api.models import Url
 
 UserModel = get_user_model()
 
