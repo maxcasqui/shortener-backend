@@ -45,16 +45,14 @@ class UserView(APIView):
         serializer = UserSerializer(request.user)
         return Response({'user': serializer.data}, status=status.HTTP_200_OK)
 
-# class UserUrlsView(APIView):
-#     permission_classes = (permissions.IsAuthenticated,)
-#     authentication_classes = (SessionAuthentication,)
+class UrlView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (SessionAuthentication,)
 
-#     def get(self, user_id):
-#         try:
-#             url = Url.objects.filter(user_id=user_id)
-#         except:
-#             return Response(status=status.HTTP_404_NOT_FOUND)
-
-#         serializer = UrlSerializer(url, many=True)
-
-#         return Response(serializer.data)
+    def get(self, request):
+        if request.user.is_authenticated:
+            # Save to database url and shortened url
+            pass
+        else:
+            # Short Url without saving anything because user hasn't logged in
+            pass

@@ -35,8 +35,3 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
         fields = ('email', 'username')
-
-# class UrlSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Url
-#         fields = ('user_id', 'original_url', 'shortened_url')

@@ -33,12 +33,3 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
-
-# class Url(models.Model):
-#     user_id = models.ForeignKey(AppUser, on_delete=models.CASCADE, related_name='user_urls')
-#     original_url = models.CharField(255)
-#     shortened_url = models.CharField(255)
-
-#     def __str__(self):
-#         url = f"Original Url:{self.original_url} \n Shortened Url: {self.shorted_url}"
-#         return url
