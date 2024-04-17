@@ -33,3 +33,11 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
+
+class URL(models.Model):
+    originalUrl = models.URLField(max_length=500)
+    slug = models.CharField()
+    user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.originalUrl} - {self.slug}'
