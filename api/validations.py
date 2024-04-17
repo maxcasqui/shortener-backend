@@ -1,3 +1,4 @@
+import re
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 UserModel = get_user_model()
@@ -35,3 +36,8 @@ def validate_password(data):
     if not password:
         raise ValidationError('a password is needed')
     return True
+
+def validate_url(url):
+    regex = r"(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+
+    return bool(re.match(regex, url))
