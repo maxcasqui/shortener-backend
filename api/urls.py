@@ -6,5 +6,7 @@ urlpatterns = [
     path('login', views.UserLogin.as_view(), name='login'),
     path('logout', views.UserLogout.as_view(), name='logout'),
     path('user', views.UserView.as_view(), name='user'),
-    
+    path('url', views.UrlView.as_view(), name='url'),
+    path('url_an', views.NotAuthenticatedUserUrlView.as_view(), name='url_an'),
+    path('url_list', views.UserUrlListView.as_view(), name='url_list')
 ]

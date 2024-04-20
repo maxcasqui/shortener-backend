@@ -1,43 +1,40 @@
 import re
-from django.core.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 UserModel = get_user_model()
 
-def custom_validation(data):
-    email = data['email'].strip()
-    username = data['username'].strip()
-    password = data['password'].strip()
-
-    if not email or UserModel.objects.filter(email=email).exists():
-        raise ValidationError('choose another email')
-
-    if not password or len(password) < 8:
-        raise ValidationError('choose another password, min 8 characters')
-
+def validate_data(data):
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+    ##
+    if not email:
+        raise ValidationError("Email cannot be empty.")
+    if not password:
+        raise ValidationError("Password cannot be empty.")
     if not username:
-        raise ValidationError('choose another username')
+        raise ValidationError("User Name cannot be empty.")
+    if email_exists(email):
+        raise ValidationError("This email address is already in use.")
+    ##
     return data
 
+def email_exists(email):
+    if UserModel.objects.filter(email=email).exists():
+        return True
+    return False
 
-def validate_email(data):
-    email = data['email'].strip()
-    if not email:
-        raise ValidationError('an email is needed')
-    return True
+def match_password_regex(password):
+    pass
 
-def validate_username(data):
-    username = data['username'].strip()
-    if not username:
-        raise ValidationError('choose another username')
-    return True
-
-def validate_password(data):
-    password = data['password'].strip()
-    if not password:
-        raise ValidationError('a password is needed')
-    return True
-
-def validate_url(url):
+def validate_url(data):
+    url = data.get('original_url')
     regex = r"(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+    if not bool(re.match(regex, url)):
+        None
+    return data
 
-    return bool(re.match(regex, url))
+def validate_token(authorization_header):
+    if authorization_header and authorization_header.startswith('Bearer '):
+        return authorization_header.split(' ')[1]
+    return None
