@@ -16,7 +16,8 @@ def validate_data(data):
         raise ValidationError("User Name cannot be empty.")
     if email_exists(email):
         raise ValidationError("This email address is already in use.")
-    ##
+    if not match_password_regex(password):
+        raise ValidationError("Password should have minimum eight characters, at least one letter, one number and one special character")
     return data
 
 def email_exists(email):
@@ -25,7 +26,8 @@ def email_exists(email):
     return False
 
 def match_password_regex(password):
-    pass
+    password_pattern = "^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&\.\-_])[A-Za-z\d@$!%*#?&\.\-_]{8,}$"
+    return bool(re.match(password_pattern, password))
 
 def validate_url(data):
     url = data.get('original_url')
