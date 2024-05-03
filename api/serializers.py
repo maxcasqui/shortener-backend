@@ -50,7 +50,7 @@ class AllURLSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(max_length=10)
     class Meta:
         model = URL
-        fields = ('original_url','slug')
+        fields = ('id','original_url','slug')
 
 class URLSerializer(serializers.ModelSerializer):
     original_url = serializers.URLField(max_length=500)

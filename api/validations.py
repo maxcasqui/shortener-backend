@@ -26,7 +26,7 @@ def email_exists(email):
     return False
 
 def match_password_regex(password):
-    password_pattern = "^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&\.\-_])[A-Za-z\d@$!%*#?&\.\-_]{8,}$"
+    password_pattern = r"^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&\.\-_])[A-Za-z\d@$!%*#?&\.\-_]{8,}$"
     return bool(re.match(password_pattern, password))
 
 def validate_url(data):
