@@ -82,3 +82,9 @@ class NotAuthenticatedURLSerializer(serializers.ModelSerializer):
         if not slug:
             slug = get_slug()
         return URL.objects.create(slug=slug, **validated_data)
+
+class RedirectSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = URL
+        fields = ('original_url','slug')
+        lookup_field = 'slug'

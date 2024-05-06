@@ -44,7 +44,7 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
 
 class URL(models.Model):
     original_url = models.URLField(max_length=500)
-    slug = models.CharField(max_length=10)
+    slug = models.CharField(max_length=10, unique=True)
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
 
     def __str__(self):

@@ -3,9 +3,10 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.exceptions import ValidationError
-from api.models import URL
+from django.http import Http404,HttpResponseRedirect
+from .models import URL
 from .validations import validate_data, validate_url
-from .serializers import AllURLSerializer, NotAuthenticatedURLSerializer, UserRegisterSerializer, UserLoginSerializer, UserSerializer, URLSerializer
+from .serializers import AllURLSerializer, NotAuthenticatedURLSerializer, UserRegisterSerializer, UserLoginSerializer, UserSerializer, URLSerializer, RedirectSerializer
 
 class UserRegister(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -84,8 +85,23 @@ class NotAuthenticatedUserUrlView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserUrlListView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
     def get(self, request):
-        user = request.user
-        urls = URL.objects.filter(user=user)
-        serializer = AllURLSerializer(urls, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            user = request.user
+            urls = URL.objects.filter(user=user)
+            serializer = AllURLSerializer(urls, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+class RedirectView(APIView):
+    def get(self, request, slug):
+        try:
+            # Another way to access the slug
+            self_slug = self.kwargs['slug']
+            url = URL.objects.get(slug=slug)
+            redirect_serializer = RedirectSerializer(url)
+            return HttpResponseRedirect(redirect_serializer.data['original_url'])
+        except:
+            raise Http404('Sorry this link is broken')
