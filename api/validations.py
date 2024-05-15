@@ -1,10 +1,11 @@
 import re
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from .models import URL
+
 UserModel = get_user_model()
 
 def validate_data(data):
-    username = data.get('username')
     email = data.get('email')
     password = data.get('password')
     ##
@@ -12,8 +13,6 @@ def validate_data(data):
         raise ValidationError("Email cannot be empty.")
     if not password:
         raise ValidationError("Password cannot be empty.")
-    if not username:
-        raise ValidationError("User Name cannot be empty.")
     if email_exists(email):
         raise ValidationError("This email address is already in use.")
     if not match_password_regex(password):
@@ -35,6 +34,34 @@ def validate_url(data):
     if not bool(re.match(regex, url)):
         None
     return data
+
+def validate_url_logged_user(data):
+    url = data.get('original_url')
+    slug = data.get('slug')
+    if not is_valid_url(url):
+        raise ValidationError('Invalid URL')
+    if bool(slug) and not is_valid_slug(slug):
+        raise
+    return data
+
+def validate_url_notlogged_user(data):
+    url = data.get('original_url')
+    if not is_valid_url(url):
+        raise ValidationError('Invalid URL')
+    return data
+
+def is_valid_url(url):
+    regex = r"(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+    return bool(re.match(regex, url))
+
+def is_valid_slug(slug):
+    slug_length = len(slug)
+    if slug_length < 5 or slug_length > 20:
+        raise ValidationError('Slug must have more than 5 and less than 20 characters')
+    found_slug = bool(URL.objects.filter(slug=slug))
+    if bool(found_slug):
+        raise ValidationError('This slug is already in use')
+    return True
 
 def validate_token(authorization_header):
     if authorization_header and authorization_header.startswith('Bearer '):

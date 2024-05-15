@@ -5,7 +5,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.exceptions import ValidationError
 from django.http import Http404,HttpResponseRedirect
 from .models import URL
-from .validations import validate_data, validate_url
+from .validations import validate_data, validate_url_logged_user, validate_url_notlogged_user
 from .serializers import AllURLSerializer, NotAuthenticatedURLSerializer, UserRegisterSerializer, UserLoginSerializer, UserSerializer, URLSerializer, RedirectSerializer
 
 class UserRegister(APIView):
@@ -22,7 +22,7 @@ class UserRegister(APIView):
                     return Response({'detail': 'User Created.'}, status=status.HTTP_201_CREATED)
             return Response(status=status.HTTP_400_BAD_REQUEST)
         except ValidationError as e:
-            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': e.detail[0]}, status=status.HTTP_400_BAD_REQUEST)
 
 class UserLogin(APIView):
     permission_classes = (permissions.AllowAny,)
@@ -59,30 +59,85 @@ class UserView(APIView):
         return Response({'user': serializer.data}, status=status.HTTP_200_OK)
 
 class UrlView(APIView):
-    permission_classes = (permissions.IsAuthenticated,)
-    def post(self, request):
-        clean_data = validate_url(request.data)
-        ##
-        if clean_data is None:
-            return Response({'error': 'Invalid URL'}, status=status.HTTP_400_BAD_REQUEST)
-        ##
-        serializer = URLSerializer(data=clean_data, context={'request': request})
-        if serializer.is_valid():
-            instance = serializer.save()
-            return Response({'slug': instance.slug}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # permission_classes = (permissions.IsAuthenticated,)
 
-class NotAuthenticatedUserUrlView(APIView):
-    permission_classes = (permissions.AllowAny,)
-    ##
+    def get(self, request, id):
+        try:
+            url = URL.objects.get(id=id)
+            serializer = URLSerializer(url)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    # TODO: Forbid resouce to not logged/owner user of a url (HTTP 403)
+    # def get(self,request,id):
+    #     try:
+    #         url = URL.objects.get(id=id)
+    #         user = request.user
+    #         if url.user == user:
+    #             serializer = URLSerializer(url)
+    #             return Response({'url':serializer.data}, status=status.HTTP_200_OK)
+    #     except Error as e:
+    #         return Response({'detail': str(te)},status=status.HTTP_400_BAD_REQUEST)
+
     def post(self, request):
-        clean_data = validate_url(request.data)
-        ##
-        serializer = NotAuthenticatedURLSerializer(data=clean_data)
-        if serializer.is_valid():
-            instance = serializer.save()
-            return Response({'slug': instance.slug}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if request.user.is_authenticated:
+            try:
+                clean_data = validate_url_logged_user(request.data)
+                serializer = URLSerializer(data=clean_data, context={'request': request})
+                if serializer.is_valid():
+                    instance = serializer.save()
+                    return Response({'slug': instance.slug}, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except ValidationError as e:
+                return Response({'error': e.detail[0]}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # If not authenticated, only original_url must be send
+            try:
+                clean_data = validate_url_notlogged_user(request.data)
+                serializer = NotAuthenticatedURLSerializer(data=clean_data)
+                if serializer.is_valid():
+                    instance = serializer.save()
+                    return Response({'slug': instance.slug}, status=status.HTTP_201_CREATED)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except ValidationError as e:
+                return Response({'error': e.detail[0]}, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, id):
+        if not request.user.is_authenticated:
+            return Response({'message':'User must be logged'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            url = URL.objects.get(id=id)
+            user = request.user
+            if url.user != user:
+                return Response({'message':'This resource can only be updated by the owner'}, status=status.HTTP_403_FORBIDDEN)
+
+            clean_data = validate_url_logged_user(request.data)
+            serializer = URLSerializer(instance=url, data=clean_data, context={'request': request})
+            if serializer.is_valid():
+                instance = serializer.save()
+                return Response({'id':instance.id ,'url': instance.original_url, 'slug': instance.slug}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response({'error': e.detail[0]}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print('Exception e')
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def delete(self, request, id):
+        if not request.user.is_authenticated:
+            return Response({'message':'User must be logged'}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            found_url = URL.objects.get(id=id)
+            user = request.user
+            if found_url.user != user:
+                return Response({'message':'This resource can only be deleted by the owner'}, status=status.HTTP_403_FORBIDDEN)
+            found_url.delete()
+            return Response({'message':'Succesful deleted'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class UserUrlListView(APIView):
     permission_classes = (permissions.IsAuthenticated,)

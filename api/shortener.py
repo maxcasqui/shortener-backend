@@ -1,18 +1,14 @@
-import random
-import uuid
 from api.models import URL
+from random import choice
+from string import ascii_letters, digits
 
-def get_slug():
-    slug = generate_slug()
-    while slug_exists(slug):
-        slug = generate_slug()
-    return slug
+AVAILABLE_CHARS = ascii_letters + digits
 
-def slug_exists(slug):
-    return URL.objects.filter(slug=slug).exists()
+def create_random_slug(chars=AVAILABLE_CHARS):
+    return "".join([choice(chars) for _ in range(6)])
 
 def generate_slug():
-    random_number = str(random.randint(0, 100))
-    base_slug = str(uuid.uuid4())[-4:]
-    slug = base_slug.join(random_number)
-    return slug
+    random_slug = create_random_slug()
+    if URL.objects.filter(slug=random_slug).exists():
+        return generate_slug()
+    return random_slug

@@ -15,8 +15,8 @@ class AppUserManager(BaseUserManager):
 
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_verified', True)
         if not email:
             raise ValueError('Email is required.')
         if not password:
@@ -44,7 +44,7 @@ class AppUser(AbstractBaseUser, PermissionsMixin):
 
 class URL(models.Model):
     original_url = models.URLField(max_length=500)
-    slug = models.CharField(max_length=10, unique=True)
+    slug = models.CharField(max_length=20, unique=True)
     user = models.ForeignKey(AppUser, on_delete=models.CASCADE)
 
     def __str__(self):
