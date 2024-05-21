@@ -28,13 +28,6 @@ def match_password_regex(password):
     password_pattern = r"^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&\.\-_])[A-Za-z\d@$!%*#?&\.\-_]{8,}$"
     return bool(re.match(password_pattern, password))
 
-def validate_url(data):
-    url = data.get('original_url')
-    regex = r"(https?:\/\/)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
-    if not bool(re.match(regex, url)):
-        None
-    return data
-
 def validate_url_logged_user(data):
     url = data.get('original_url')
     slug = data.get('slug')

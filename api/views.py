@@ -69,17 +69,6 @@ class UrlView(APIView):
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    # TODO: Forbid resouce to not logged/owner user of a url (HTTP 403)
-    # def get(self,request,id):
-    #     try:
-    #         url = URL.objects.get(id=id)
-    #         user = request.user
-    #         if url.user == user:
-    #             serializer = URLSerializer(url)
-    #             return Response({'url':serializer.data}, status=status.HTTP_200_OK)
-    #     except Error as e:
-    #         return Response({'detail': str(te)},status=status.HTTP_400_BAD_REQUEST)
-
     def post(self, request):
         if request.user.is_authenticated:
             try:
@@ -96,6 +85,7 @@ class UrlView(APIView):
             try:
                 clean_data = validate_url_notlogged_user(request.data)
                 serializer = NotAuthenticatedURLSerializer(data=clean_data)
+
                 if serializer.is_valid():
                     instance = serializer.save()
                     return Response({'slug': instance.slug}, status=status.HTTP_201_CREATED)
